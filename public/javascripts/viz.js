@@ -123,12 +123,8 @@ function viz_thread(threads) {
         fields,
         width);
     table_rows.on("click", function(d, i) {
-        d3.select(lastclick).style({
-            "background-color":"white"
-        });
-        d3.select(this).style({
-            "background-color":"#d6d6c2"
-        });
+        d3.select(lastclick).classed("info", false);
+        d3.select(this).classed("info", true);
         lastclick = this;
         var thread_users = threads[i].posts.map(function(post) {return post.userid;});
         var filtered_users = Dispatcher.forum.users.filter(function (user){
@@ -160,12 +156,8 @@ function viz_user(users) {
         fields,
         width);
     table_rows.on("click", function(d, i) {
-        d3.select(lastclick).style({
-            "background-color":"white"
-        });
-        d3.select(this).style({
-            "background-color":"#d6d6c2"
-        });
+        d3.select(lastclick).classed("info", false);
+        d3.select(this).classed("info", true);
         lastclick = this;
         var user_threads = users[i].posts.map(function(post) {return post.threadid;});
         var filtered_threads = Dispatcher.forum.threads.filter(function (thread){
