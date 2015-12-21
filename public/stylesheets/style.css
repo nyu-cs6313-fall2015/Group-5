@@ -1,5 +1,5 @@
 .scroll {
-    height: 400px;
+    height: 450px;
     overflow: scroll;
 }
 
@@ -33,11 +33,11 @@
 }
 
 #tooltip {
-    border: solid 1px black;
+    /*border: solid 1px black;*/
     display: none;
     position: absolute;
     background-color: white;
-    color: blue;
+    color: black;
 }
 
 #tooltip > p {

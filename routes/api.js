@@ -33,7 +33,7 @@ router.get('/users', function(req, res, next) {
 });
 
 
-function getUserPostsInForum(forumid, userid, callback) {
+function getUserThreadsInForum(forumid, userid, callback) {
     posts
     .aggregate([
         {
@@ -45,7 +45,7 @@ function getUserPostsInForum(forumid, userid, callback) {
         },
         { $project:
             {   
-                "_id": 1
+                "_id": "$threadid"
             }
         }
     ])
@@ -59,13 +59,13 @@ function getUserPostsInForum(forumid, userid, callback) {
     })
 }
 
-function getThreadsByPosts(postids, callback) {
+function getThreadsByIDs(threadids, callback) {
     posts
     .aggregate([
         {
             $match:
             {
-                "_id": { $in: postids }
+                "threadid": { $in: threadids }
             }
         },
         { $group: 
@@ -98,11 +98,11 @@ function getThreadsByPosts(postids, callback) {
     })
 }
 
-router.get('/users/:forumid/:userid', function(req, res, next) {
+router.get('/threads/:forumid/:userid', function(req, res, next) {
     var forumid = mongoose.Types.ObjectId(req.params.forumid);
     var userid = mongoose.Types.ObjectId(req.params.userid);
-    getUserPostsInForum(forumid, userid, function(postids) {
-        getThreadsByPosts(postids, function(data) {
+    getUserThreadsInForum(forumid, userid, function(threadids) {
+        getThreadsByIDs(threadids, function(data) {
             res.json(data);
         })
     })
@@ -115,14 +115,18 @@ router.get('/forums', function(req, res, next) {
             {
                 _id: "$forumid", 
                 threads: {$addToSet: "$threadid"},
-                users: {$addToSet: "$userid"}
+                users: {$addToSet: "$userid"},
+                first_post_date: {$min: "$date"},
+                last_post_date: {$max: "$date"}
             }
         },
         { $project:
             {
                 forumid: "$_id",
                 number_of_threads: { $size: "$threads" },
-                number_of_users: { $size: "$users" }
+                number_of_users: { $size: "$users" },
+                first_post_date: "$first_post_date",
+                last_post_date: "$last_post_date"
             }
         }
     ])
@@ -179,7 +183,7 @@ function getThreadsInForum(forumid, callback) {
         { $group: 
             {
                 _id: "$threadid", 
-                posts: { $push: {postid: "$_id", date: "$date"} },
+                posts: { $push: {postid: "$_id", date: "$date", userid: "$userid"} },
                 users: {$addToSet: "$userid"}
             }
         },
@@ -218,7 +222,7 @@ function getUsersInForum(forumid, callback) {
         { $group: 
             {
                 _id: "$userid", 
-                posts: { $push: {postid: "$_id", date: "$date"} },
+                posts: { $push: {postid: "$_id", date: "$date", threadid: "$threadid"} },
                 threads: {$addToSet: "$threadid"}
             }
         },
@@ -227,8 +231,7 @@ function getUsersInForum(forumid, callback) {
                 userid: "$_id",
                 posts: "$posts",
                 number_of_posts: { $size: "$posts" },
-                number_of_threads: { $size: "$threads" }
-            }
+                number_of_threads: { $size: "$threads" }            }
         }
     ])
     .exec(function(err, data) {

@@ -9,8 +9,8 @@ var routes = require('./routes/index');
 var api = require('./routes/api');
 
 var mongoose = require('mongoose');
-// mongoose.connect('mongodb://tebyt:vizugforum@ds033875.mongolab.com:33875/heroku_wc3w4m58', function(err) {
-mongoose.connect('mongodb://localhost/forum', function(err) {
+mongoose.connect('mongodb://tebyt:vizugforum@ds033875.mongolab.com:33875/heroku_wc3w4m58', function(err) {
+// mongoose.connect('mongodb://localhost/forum', function(err) {
     if(err) {
         console.log('connection error', err);
     } else {
