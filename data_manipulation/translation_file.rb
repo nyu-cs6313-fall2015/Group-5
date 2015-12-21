@@ -1,25 +1,25 @@
-table "new_user" , :rename_to => "user" do
+table "new_user" , :rename_to => "users" do
   column "userid", :key
   column "username", :string
 end
 
-table "new_forum" , :rename_to => "forum" do
+table "new_forum" , :rename_to => "forums" do
   column "forumid", :key
   column "title", :string
 end
 
-table "new_post", :rename_to => "post" do
+table "new_post", :rename_to => "posts" do
   column "postid", :key
-  column "threadid", :integer, :references => :thread
-  column "userid", :integer, :references => :user
+  column "threadid", :integer, :references => :threads
+  column "userid", :integer, :references => :users
   column "title", :string
-  column "date", :timestamps
+  column "date", :datetime
   column "content", :text
+  column "forumid", :integer, :references => :forums
 end
 
 
-table "new_thread", :rename_to => "thread" do
+table "new_thread", :rename_to => "threads" do
   column "threadid", :key
   column "title", :string
-  column "forumid", :integer, :references => :forum
 end

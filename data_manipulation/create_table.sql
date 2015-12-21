@@ -12,22 +12,26 @@ SELECT threadid, forumid, title FROM carderscc_01.thread;
 
 DROP TABLE new_post;
 CREATE TABLE new_post
-SELECT * FROM
-		(SELECT postid, threadid, userid, title, dateline AS date, pagetext AS content
-		FROM carderscc_01.post
-		WHERE userid != 0
-	UNION
-		SELECT postid, threadid, userid, title, dateline AS date, pagetext AS content
-		FROM
-			(SELECT postid, threadid, username, title, dateline, pagetext
+SELECT postid, t4.threadid, userid, forumid, title, FROM_UNIXTIME(dateline) AS date, content FROM
+	(SELECT * FROM
+			(SELECT postid, threadid, userid, title, dateline, pagetext AS content
 			FROM carderscc_01.post
-			WHERE userid = 0) AS t1
-		JOIN
-			(SELECT username, userid
-			FROM carderscc_01.user) AS t2 
-		ON t1.username = t2.username
-        WHERE userid IS NOT NULL) AS t3
-	WHERE title != "" AND content != "";
+			WHERE userid != 0
+		UNION
+			SELECT postid, threadid, userid, title, dateline, pagetext AS content
+			FROM
+				(SELECT postid, threadid, username, title, dateline, pagetext
+				FROM carderscc_01.post
+				WHERE userid = 0) AS t1
+			JOIN
+				(SELECT username, userid
+				FROM carderscc_01.user) AS t2 
+			ON t1.username = t2.username
+	        WHERE userid IS NOT NULL) AS t3
+		WHERE title != "" AND content != "") AS t4
+LEFT JOIN
+	(SELECT threadid, forumid FROM new_thread) AS t5
+ON t4.threadid = t5.threadid;
 
 
 DROP TABLE new_user;

@@ -1,10 +1,14 @@
 var data;
-
+viz_forum_list();
+var lastclick;
+// viz_thread();
+// viz_user();
 var Dispatcher = {
-    init: function(forum) {
-        this.forum = forum;
-        this.forum.threads = alterThreads(this.forum.threads);
-        this.forum.users = alterUsers(this.forum.users);
+    init: function(forumid) {
+        d3.json("/api/forums/"+forumid, function (forum) {
+            this.forum = forum;
+            this.viz();
+        }.bind(this))
     },
     vizThread: function(filter) {
         var threads = this.forum.threads;
@@ -22,67 +26,71 @@ var Dispatcher = {
     vizUser: function(filter) {
         var users = this.forum.users;
         if (typeof filter != "undefined") {
-            users = filter.map(function (i) {
                 return users[i];
-            })
-        }
+            }
         viz_user(users);
         d3.selectAll("td").style({
             "padding": "0px",
             "vertical-align": "middle"
         });
     },
-    viz : function() {
+    viz: function() {
         this.vizThread();
         this.vizUser();
     }
-
 }
 
-d3.json("dual_data.json", function (d) {
-    data = d.data;
-    viz_forum_list(data);
-    viz_thread();
-    viz_user();
-});
 
-function viz_forum_list(dataset) {
-    var table_rows = viz_table_structure(dataset, "#search_result",
-        "<th>Forum Name</th><th># of Threads</th><th># of Users</th>",
-        ["forumtitle", "numberofthreads", "numberofusers"],
-        ["50%", "25%", "25%"]);
+function viz_forum_list() {
+    d3.json('/api/forums', function(dataset) {
+        var fields = ["title", "number_of_threads", "number_of_users", "_id"];
+
+        var table_rows = viz_table_structure(dataset, "#search_result",
+            "<th>Forum Name</th><th># of Threads</th><th># of Users</th>",
+            fields,
+            ["50%", "25%", "25%"]);
 
 
-    var opened = false;
+        var opened = false;
 
-    table_rows.on("click", function(d, i) {
-            d3.select("#search_result").style({
-                "display": "none",
-            });
-            d3.select("#cover").style({
-                "display": "none"
-            });
-            d3.select("#forum_search").html(dataset[i].forumtitle
-                + ' <span class="caret"></span>');
-            opened = false;
-            Dispatcher.init(dataset[i]);
-            Dispatcher.viz();
-        });
-    table_rows.append("td").text(function(d) {return d.forumtitle;});
-    table_rows.append("td").text(function(d) {return d.numberofthreads;});
-    table_rows.append("td").text(function(d) {return d.numberofusers;});
-
-    d3.select("#forum_search")
-        .on("click", function() {
-            if (!opened) {
+        table_rows.on("click", function(d, i) {
                 d3.select("#search_result").style({
-                    "display": "table"
+                    "display": "none",
                 });
                 d3.select("#cover").style({
-                    "display": "block"
+                    "display": "none"
                 });
-                opened = true;
-            } else {
+                d3.select("#forum_search").html(dataset[i][fields[0]]
+                    + ' <span class="caret"></span>');
+                opened = false;
+                Dispatcher.init(d[fields[3]]);
+            });
+        table_rows.append("td").html(function(d) {return d[fields[0]];});
+        table_rows.append("td").text(function(d) {return d[fields[1]];});
+        table_rows.append("td").text(function(d) {return d[fields[2]];});
+
+        d3.select("#forum_search")
+            .on("click", function() {
+                if (!opened) {
+                    d3.select("#search_result").style({
+                        "display": "table"
+                    });
+                    d3.select("#cover").style({
+                        "display": "block"
+                    });
+                    opened = true;
+                } else {
+                    d3.select("#search_result").style({
+                        "display": "none",
+                    });
+                    d3.select("#cover").style({
+                        "display": "none"
+                    });
+                    opened = false;
+                }
+            })
+        d3.select("#cover")
+            .on("mousedown", function() {
                 d3.select("#search_result").style({
                     "display": "none",
                 });
@@ -90,18 +98,8 @@ function viz_forum_list(dataset) {
                     "display": "none"
                 });
                 opened = false;
-            }
-        })
-    d3.select("#cover")
-        .on("mousedown", function() {
-            d3.select("#search_result").style({
-                "display": "none",
-            });
-            d3.select("#cover").style({
-                "display": "none"
-            });
-            opened = false;
-        })
+            })
+    })
 }
 
 
@@ -109,14 +107,22 @@ function viz_thread(threads) {
     var width = [0.2, 0.25, 0.25, 0.3].map(function (d) {
         return d * d3.select("#thread").node().getBoundingClientRect().width;
     });
+    var fields = ["title", "number_of_users", "number_of_posts", "posts", "_id"];
     var table_rows = viz_table_structure(threads, "#thread",
         "<th>Thread title</th><th># of Users</th><th># of Posts</th><th>Time Series</th>",
-        ["title", "userNum", "postNum", "timeSeries"],
+        fields,
         width);
     if (typeof threads == "undefined") {
         return;
     }
     table_rows.on("click", function(d) {
+        d3.select(lastclick).style({
+            "background-color":"white"
+        });
+        d3.select(this).style({
+            "background-color":"#d6d6c2"
+        });
+        lastclick = this;
         var filter = d.posts.reduce(function (prev, next) {
             if (prev.indexOf(next.userIndex) < 0) {
                 prev.push(next.userIndex);
@@ -125,29 +131,36 @@ function viz_thread(threads) {
         },[])
         Dispatcher.vizUser(filter);
     })
-    //threads = alterThreads(threads);
 
 
     //var height = table_rows.node().getBoundingClientRect().height;
     var height = 18;
-    viz_name(threads, "title", table_rows, width[0], height)
-    viz_number(threads, "userNum", table_rows, width[1], height, Dispatcher.forum.numberofusers);
-    viz_number(threads, "postNum", table_rows, width[2], height, Dispatcher.forum.numberofposts);
-    viz_time_series(threads, table_rows, width[3], height);
+    viz_name(threads, fields[0], table_rows, width[0], height)
+    viz_number(threads, fields[1], table_rows, width[1], height);
+    viz_number(threads, fields[2], table_rows, width[2], height);
+    viz_time_series(threads, fields[3], table_rows, width[3], height);
 }
 
 function viz_user(users, filter) {
     var width = [0.2, 0.25, 0.25, 0.3].map(function (d) {
         return d * d3.select("#user").node().getBoundingClientRect().width;
     });
+    var fields = ["username", "number_of_threads", "number_of_posts", "posts", "_id"];
     table_rows = viz_table_structure(users, "#user",
         "<th>User Name</th><th># of Threads</th><th># of Posts</th><th>Time Series</th>",
-        ["username", "threadNum", "postNum", "timeSeries"],
+        fields,
         width);
     if (typeof users == "undefined") {
         return;
     }
     table_rows.on("click", function(d) {
+        d3.select(lastclick).style({
+            "background-color":"white"
+        });
+        d3.select(this).style({
+            "background-color":"#d6d6c2"
+        });
+        lastclick = this;
         var filter = d.posts.reduce(function (prev, next) {
             if (prev.indexOf(next.threadindex) < 0) {
                 prev.push(next.threadindex);
@@ -157,27 +170,13 @@ function viz_user(users, filter) {
         Dispatcher.vizThread(filter);
     })
 
-    //users = alterUsers(users);
-
     var height = 18;
-    viz_name(users, "username", table_rows, width[0], height);
-    viz_number(users, "threadNum", table_rows, width[1], height, Dispatcher.forum.numberofthreads);
-    viz_number(users, "postNum", table_rows, width[2], height, Dispatcher.forum.numberofusers);
+    viz_name(users, fields[0], table_rows, width[0], height);
+    viz_number(users, fields[1], table_rows, width[1], height);
+    viz_number(users, fields[2], table_rows, width[2], height);
     viz_time_series(users, table_rows, width[3], height);
 }
 
-// temporary functions
-function ThreadUserNum(obj) {
-    var num = 0;
-    var useridarray = Array();
-    for (var i = 0; i < obj.length; i++) {
-        if (useridarray.indexOf(obj[i]["userid"]) > -1) {} else {
-            num += 1;
-            useridarray.push(obj[i]["userid"])
-        }
-    }
-    return num;
-}
 
 function viz_table_structure(dataset, div_table, thhtml, thdata, width) {
     d3.select(div_table).html("");
@@ -220,29 +219,7 @@ function viz_table_structure(dataset, div_table, thhtml, thdata, width) {
     return table_rows;
 }
 
-function alterThreads(threads) {
-    threads = threads.map(function (thread) {
-        thread.userNum = ThreadUserNum(thread.posts);
-        thread.postNum = thread.posts.length;
-        return thread;
-    });
-
-    return threads;
-}
-
-function alterUsers(users) {
-    users = users.map(function (user) {
-        user.threadNum = user.posts.reduce(function (prev, next) {
-            prev.add(next.threadindex);
-            return prev;
-        },new Set()).size;
-        user.postNum = user.posts.length;
-        return user;
-    });
-    return users;
-}
-
-function viz_time_series(dataset, table_rows, width, height) {
+function viz_time_series(dataset, postfield, table_rows, width, height) {
 
     var scale = 50; // Merge data to how many blocks
 
@@ -252,7 +229,7 @@ function viz_time_series(dataset, table_rows, width, height) {
     scaleY.range([0, height]);
 
     var postss = dataset.map(function (d) {
-        return rescale(d.posts, scale, scaleX, scaleY);
+        return rescale(d[postfield], scale, scaleX, scaleY);
     })
 
     table_rows.append("td")
@@ -266,7 +243,7 @@ function viz_time_series(dataset, table_rows, width, height) {
         .selectAll("rect")
         .data(function(posts) {return posts;})
         .enter().append("rect")
-        .attr("fill", "blue")
+        .attr("fill", "rgba(0,0,0,0.6)")
         .attr("class", "bar")
         .attr("x", function(d) { return d.x; })
         .attr("width", function(d) { return width/scale; })
@@ -285,15 +262,17 @@ function viz_time_series(dataset, table_rows, width, height) {
 }
 
 function rescale(posts, scale, scaleX, scaleY) {
+    posts = posts.map(function (d) {
+        d.date = new Date(d.date);
+    });
     var minDate = d3.min(posts, function(d) { return d.date; });
     var maxDate = d3.max(posts, function(d) { return d.date; });
     var slot = Math.floor((maxDate - minDate) / scale);
-    posts = posts.map(function (d) {
-        return {
-            "date": Math.floor((d.date - minDate) / slot) * slot + minDate
-        }
-    })
-
+    // posts = posts.map(function (d) {
+    //     return {
+    //         "date": Math.floor((d.date - minDate) / slot) * slot + minDate
+    //     }
+    // })
     posts = posts.reduce(function (prev, next) {
         var matched = false;
         prev.forEach(function (d) {
@@ -349,16 +328,16 @@ function viz_name(dataset, namefield, table_rows, width, height) {
 
 
 
-function viz_number(dataset, numberfield, table_rows, width, height, maxNum) {
+function viz_number(dataset, numberfield, table_rows, width, height) {
 
 
 
-    //var maxNum = dataset.reduce(function (prev, next) {
-    //    if (next[numberfield] > prev) {
-    //        prev = next[numberfield];
-    //    }
-    //    return prev;
-    //}, 0);
+    var maxNum = dataset.reduce(function (prev, next) {
+       if (next[numberfield] > prev) {
+           prev = next[numberfield];
+       }
+       return prev;
+    }, 0);
 
     var scale = function (userNum) {
         return (userNum / maxNum) * width;
@@ -382,7 +361,7 @@ function viz_number(dataset, numberfield, table_rows, width, height, maxNum) {
             return scale(d[numberfield]);
         })
         .attr("height", height)
-        .attr("fill", "blue");
+        .attr("fill", "rgba(0,0,0,0.6)");
 }
 
 function showTooltip(html) {

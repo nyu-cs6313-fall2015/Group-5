@@ -1,0 +1,33 @@
+/api/users/:forumid
+
+[
+  {
+    "_id": "56773b0c35a032df86000efa",
+    "posts": [
+      {
+        "postid": "56773b2a35a032df86025987",
+        "date": "2009-12-27T18:11:47.000Z"
+      }
+    ],
+    "number_of_posts": 1,
+    "number_of_threads": 1,
+    "username": "essah"
+  }
+]
+
+/api/threads/:forumid
+
+[
+  {
+    "_id": "56773b2b35a032df86026385",
+    "posts": [
+      {
+        "postid": "56773b2a35a032df86024ff0",
+        "date": "2009-11-26T17:22:29.000Z"
+      }
+    ],
+    "number_of_posts": 1,
+    "number_of_users": 1,
+    "title": "Trading with Erfolg?"
+  }
+]

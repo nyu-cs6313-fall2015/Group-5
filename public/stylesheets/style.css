@@ -1,5 +1,5 @@
 .scroll {
-    height: 500px;
+    height: 400px;
     overflow: scroll;
 }
 
@@ -29,7 +29,7 @@
 #div_forum {
     position: absolute;
     width: inherit;
-    top: 60px;
+    top: 140px;
 }
 
 #tooltip {
