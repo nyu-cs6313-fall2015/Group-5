@@ -54,7 +54,7 @@ To transfer original data in MySql to Mongodb, you should have Ruby installed, a
 		mongify process database.config translation_file.rb 
 
 #Link to the Video
-TODO
+https://vimeo.com/149692858
 #Link to the Demo
 https://viz-ug-forum.herokuapp.com/
 
