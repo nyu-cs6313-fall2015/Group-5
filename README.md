@@ -2,10 +2,10 @@
 #Visualizing Underground Forums
 
 #Authors: 
-Autumn Wu (Tebyt), Pan Chen (Tebyt), Maeda Hanafi (theTrueCaptian)
+Autumn Wu (AntumnWu), Pan Chen (Tebyt), Maeda Hanafi (theTrueCaptian)
 
 #Image of your application
-![alt tag](https://github.com/Tebyt/IV-Project/blob/master/screenshot1.png)
+![icon](./screenshot1.png)
 
 #Description
 The goal of Visualizing Underground Forums is to provide an exploratory tool to an investigator interested in such a dataset. We assume that the invstigator has an intention to learn more about the dataset and perhaps even want to pinpoint a certian entity for an investigation and clues. 
@@ -25,6 +25,33 @@ The questions are as follows:
 #####For a given user, what are his posts over time?
 #####For a given thread, who are the users active in that thread?
 
+#Exposed API
+The web app has exposed a series of API, which are:
+
+* **/api/forums** return information about forum meta
+* **/api/forums/:forumid** return the user and thread data in the specified forum
+* **/api/threads** return one sample of thread data
+* **/api/posts** return one sample of post data
+* **/api/users** return one sample of user data
+
+#Server Set-up
+
+The server uses Express as back-end framework and Mongodb as database.
+To make the server run, you should first install Node.js and nodemon and then go into the top directory to run 
+	
+	npm install
+	nodemon
+
+Or you can just upload this folder to a PaaS provider that supports Node.js, and it will take care of running it.
+
+To transfer original data in MySql to Mongodb, you should have Ruby installed, and go to the data_manipulation folder, then:
+
+* Dump the create_table.sql
+* Download mongify
+* Configue database.config
+* Go to data_manipulation folder and run 
+		
+		mongify process database.config translation_file.rb 
 
 #Link to the Video
 TODO

@@ -1,4 +1,30 @@
 extends layout
 
 block content
-  include index.html
+    .container-fluid
+      #div_search.row
+        .col-md-12.text-center
+          h1 Underground Forum Visualization
+        .col-md-12
+          button#forum_search.btn.btn-default(type='button', style='width: 100%')
+            | Forums
+            span.caret
+          table#search_result
+      #div_forum.row
+        .col-md-6
+          h4 Users
+          .scroll
+            table#user
+              tbody
+        .col-md-6
+          h4 Threads
+          .scroll
+            table#thread
+              tbody
+        .col-md-12
+          button.btn.btn-default.center-block(type='button', onclick='Dispatcher.viz()', style='margin-top: 10px')
+            | Reset
+    #tooltip
+    #cover
+
+
